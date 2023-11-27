@@ -39,7 +39,7 @@ impl Editor {
             should_quit: false,
             terminal: Terminal::default().expect("Failed to init terminal"),
             cursor_position: Position::default(),
-            document: Document::default(),
+            document: Document::open(),
         }
     }
 
@@ -70,9 +70,7 @@ impl Editor {
 
             if let Some(row) = self.document.row(terminal_row as usize) {
                 self.draw_row(row);
-            } else if terminal_row == height / 3 {
-                //[..width] is slicing the string from its beginning until width has been calculated as the min screen size
-                //or the welcome message length never slicing more of a string than what is there. 
+            } else if self.document.is_empty() && terminal_row == height / 3 {
                 self.draw_welcome_message();
             } else {
                 println!("~\r");
