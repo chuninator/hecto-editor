@@ -2,9 +2,15 @@ use std::io::{self, stdout, Read};
 use termion::raw::IntoRawMode;
 
 //Let's map our control-q to the quit operation 
+//Has some issues with vscode
 fn to_ctrl_byte(c: char) -> u8 {
     let byte = c as u8;
     byte & 0b0001_1111
+}
+
+//Error handle
+fn die(e: std::io::Error) {
+    panic!("{}", e);
 }
 
 fn main() {
@@ -13,19 +19,27 @@ fn main() {
 
     for b in io::stdin().bytes() {
 
-        let b = b.unwrap();
-        let c = b as char; 
-        if c.is_control() {
-            println!("{:?} \r", b)
-        } else {
-            println!("{:?} ({})\r", b, c);
+        match b {
+            Ok(b) => {
+                let c = b as char; 
+                if c.is_control() {
+                    println!("{:?} \r", b)
+                } else {
+                    println!("{:?} ({})\r", b, c);
+        
+                }
+          
+        
+                if c == 'q' {
+                    break; 
+                }
+
+            }
+
+            Err(err) => die(err),
 
         }
-  
 
-        if b == to_ctrl_byte('q') {
-            break; 
-        }
     }
 
 }
