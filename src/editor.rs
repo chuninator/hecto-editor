@@ -31,12 +31,13 @@ impl Editor {
     }
 
     fn draw_rows(&self) {
-        for _ in 0..self.terminal.size().height {
+        for _ in 0..self.terminal.size().height - 1 {
             println!("~\r");
         }
     }
 
     fn refresh_screen(&self) -> Result<(), std::io::Error> {
+        Terminal::cursor_hide();
         Terminal::clear_screen();
         Terminal::cursor_position(0, 0);
         if self.should_quit {
@@ -45,6 +46,7 @@ impl Editor {
             self.draw_rows();
             Terminal::cursor_position(0, 0);
         }
+        Terminal::cursor_show();
         Terminal::flush()
     }
 
