@@ -35,10 +35,17 @@ impl Editor {
 
 
         }
+
+   
     }
+
+    pub fn default() -> Self {
+        Self{}
+    }
+
 }
 
 //Error handle
-fn die(e: std::io::Error) {
+fn die(e:std::io::Error) {
     panic!("{}", e);
 }
