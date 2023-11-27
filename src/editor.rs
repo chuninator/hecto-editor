@@ -1,6 +1,7 @@
 use crate::Terminal;
 use termion::event::Key;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub struct Editor {
     should_quit: bool,
     terminal: Terminal,
@@ -31,8 +32,19 @@ impl Editor {
     }
 
     fn draw_rows(&self) {
-        for _ in 0..self.terminal.size().height - 1 {
-            println!("~\r");
+        let height = self.terminal.size().height;
+
+        for row in 0..height - 1 {
+            Terminal::clear_current_line();
+            if row == height / 3 {
+                let welcome_message = format!("Hecto editor -- version {}", VERSION);
+                let width = std::cmp::min(self.terminal.size().width as usize, welcome_message.len());
+                //[..width] is slicing the string from its beginning until width has been calculated as the min screen size
+                //or the welcome message length never slicing more of a string than what is there. 
+                println!("{}\r", &welcome_message[..width]);
+            } else {
+                println!("~\r");
+            }
         }
     }
 
@@ -41,6 +53,7 @@ impl Editor {
         Terminal::clear_screen();
         Terminal::cursor_position(0, 0);
         if self.should_quit {
+            Terminal::clear_screen();
             println!("Goodbye.\r");
         } else {
             self.draw_rows();

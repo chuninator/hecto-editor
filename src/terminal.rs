@@ -3,6 +3,8 @@ use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::{IntoRawMode, RawTerminal};
 
+//Termion handles all the escape sequences in bytes rather than us printing us out ourselves. v helpful. 
+
 pub struct Size {
     pub width: u16, 
     pub height: u16,
@@ -53,6 +55,10 @@ impl Terminal {
 
     pub fn cursor_show() {
         print!("{}", termion::cursor::Show);
+    }
+
+    pub fn clear_current_line() {
+        print!("{}", termion::clear::CurrentLine);
     }
 
     pub fn size(&self) -> &Size {
