@@ -1,6 +1,7 @@
 use crate::Terminal;
 use crate::Document;
 use crate::Row;
+use std::env;
 use termion::event::Key;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -35,11 +36,20 @@ impl Editor {
     }
 
     pub fn default() -> Self {
+        let args: Vec<String> = env::args().collect();
+        let document = if args.len() > 1 {
+            let file_name = &args[1];
+            Document::open(&file_name).unwrap_or_default()
+        } else {
+            Document::default()
+        };
+
+
         Self {
             should_quit: false,
             terminal: Terminal::default().expect("Failed to init terminal"),
             cursor_position: Position::default(),
-            document: Document::open(),
+            document,
         }
     }
 
