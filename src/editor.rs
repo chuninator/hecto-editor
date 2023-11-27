@@ -51,7 +51,7 @@ impl Editor {
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
-            Key::Char('q') => self.should_quit = true,
+            Key::Ctrl('f') => self.should_quit = true,
             _ => (),
         }
         Ok(())
