@@ -2,9 +2,11 @@ use crate::Terminal;
 use crate::Document;
 use crate::Row;
 use std::env;
+use termion::color;
 use termion::event::Key;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+const STATUS_BG_COLOR: color::Rgb = color::Rgb(239,239,239);
 
 #[derive(Default)]
 pub struct Position {
@@ -65,6 +67,17 @@ impl Editor {
         welcome_message = format!("~{}{}", spaces, welcome_message);
         welcome_message.truncate(width);
         println!("{}\r", welcome_message);
+    }
+
+    fn draw_status_bar(&self) {
+        let spaces = " ".repeat(self.terminal.size().width as usize);
+        Terminal::set_bg_color(STATUS_BG_COLOR);
+        println!("{}\r", spaces);
+        Terminal::reset_bg_color();
+    }
+
+    fn draw_message_bar(&self) {
+        Terminal::clear_current_line();
     }
 
     pub fn draw_row(&self, row: &Row) {
@@ -210,6 +223,8 @@ impl Editor {
             println!("Goodbye.\r");
         } else {
             self.draw_rows();
+            self.draw_status_bar();
+            self.draw_message_bar();
             Terminal::cursor_position(&self.cursor_position);
             Terminal::cursor_position(&Position { 
                 x: self.cursor_position.x.saturating_sub(self.offset.x), 
