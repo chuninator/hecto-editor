@@ -2,6 +2,8 @@ use crate::Terminal;
 use crate::Document;
 use crate::Row;
 use std::env;
+use std::time::Duration;
+use std::time::Instant;
 use termion::event::Key;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -11,12 +13,27 @@ pub struct Position {
     pub x: usize, 
     pub y: usize,
 }
+struct StatusMessage {
+    text: String, 
+    time: Instant,
+}
 pub struct Editor {
     should_quit: bool,
     terminal: Terminal,
     cursor_position: Position,
     document: Document,
     offset: Position,
+    status_message: StatusMessage
+}
+
+
+impl StatusMessage {
+    fn from(message: String) -> Self {
+        Self {
+            time: Instant::now(),
+            text: message,
+        }
+    }
 }
 
 impl Editor {
@@ -38,9 +55,16 @@ impl Editor {
 
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
+        let mut initial_status = String::from("HELP: Ctrl-F = quit");
         let document = if args.len() > 1 {
             let file_name = &args[1];
-            Document::open(&file_name).unwrap_or_default()
+            let doc = Document::open(&file_name);
+            if doc.is_ok() {
+                doc.unwrap()
+            } else {
+                initial_status = format!("Error: could not open file: {}", file_name);
+                Document::default()
+            }
         } else {
             Document::default()
         };
@@ -52,6 +76,7 @@ impl Editor {
             cursor_position: Position::default(),
             document,
             offset: Position::default(),
+            status_message: StatusMessage::from(initial_status),
         }
     }
 
@@ -93,7 +118,7 @@ impl Editor {
         status = format!("{}{}", status, line_indicator);
         status.truncate(width);
 
-        
+
         Terminal::set_bg_color();
         Terminal::set_fg_color();
         println!("{}\r", status);
@@ -103,6 +128,12 @@ impl Editor {
 
     fn draw_message_bar(&self) {
         Terminal::clear_current_line();
+        let message = &self.status_message;
+        if Instant::now() - message.time < Duration::new(5,0) {
+            let mut text = message.text.clone();
+            text.truncate(self.terminal.size().width as usize);
+            print!("{}", text);
+        }
     }
 
     pub fn draw_row(&self, row: &Row) {
