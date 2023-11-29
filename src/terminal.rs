@@ -71,8 +71,8 @@ impl Terminal {
         &self.size
     }
 
-    pub fn set_bg_color(color: color::Rgb) {
-        print!("{}", color::Bg(color));
+    pub fn set_bg_color() {
+        print!("{}", termion::style::Invert);
     }
 
     pub fn reset_bg_color() {
