@@ -164,7 +164,7 @@ impl Editor {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
             Key::Ctrl('f') => self.should_quit = true,
-            Key::Char('s') => {
+            Key::Ctrl('s') => {
                 if self.document.save().is_ok() {
                     self.status_message = StatusMessage::from("File saved succesffully".to_string());
                 } else {
