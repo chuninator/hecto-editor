@@ -39,7 +39,6 @@ impl Row {
     pub fn insert(&mut self, at: usize, c: char) {
         if at >= self.len() {
             self.string.push(c);
-        } else {
             self.len += 1;
             return;
         }
