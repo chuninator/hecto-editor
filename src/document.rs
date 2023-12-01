@@ -27,6 +27,23 @@ impl Document {
         })
     }
 
+    pub fn insert_newline(&mut self, at: &Position) {
+
+        if at.y > self.rows.len() {
+            return;
+        }
+
+        if at.y == self.rows.len() {
+            self.rows.push(Row::default());
+            return;
+        } 
+
+        #[allow(clippy::indexing_slicing)]
+        let new_row = self.rows[at.y].split(at.x);
+        self.rows.insert(at.y + 1, new_row);
+
+    }
+
     pub fn insert(&mut self, at: &Position, c: char) {
         if at.y > self.rows.len() {
             return; 
@@ -66,22 +83,7 @@ impl Document {
         }
     }
 
-    pub fn insert_newline(&mut self, at: &Position) {
 
-        if at.y > self.rows.len() {
-            return;
-        }
-
-        if at.y == self.rows.len() {
-            self.rows.push(Row::default());
-            return;
-        } 
-
-        #[allow(clippy::indexing_slicing)]
-        let new_row = self.rows[at.y].split(at.x);
-        self.rows.insert(at.y + 1, new_row);
-
-    }
 
     pub fn save(&mut self) -> Result<(), Error> {
         if let Some(file_name) = &self.file_name {
