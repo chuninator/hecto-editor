@@ -57,7 +57,7 @@ impl Editor {
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
         let mut initial_status =
-            String::from("HELP: Ctrl-G = find | HELP: Ctrl-S = Save | Ctrl-F = quit");
+            String::from("HELP: Ctrl-G = Find | HELP: Ctrl-S = Save | Ctrl-F = Quit");
 
         let document = if let Some(file_name) = args.get(1) {
             let doc = Document::open(file_name);
