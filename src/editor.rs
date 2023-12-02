@@ -9,7 +9,7 @@ use termion::event::Key;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const QUIT_TIMES: u8 = 3;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -187,23 +187,7 @@ impl Editor {
                 }
                 self.should_quit = true
             }
-            Key::Ctrl('g') => {
-                if let Some(query) = self
-                    .prompt("Search: ", |editor, _, query| {
-                        if let Some(position) = editor.document.find(&query) {
-                            editor.cursor_position = position; 
-                            editor.scroll();
-                        }
-                }).unwrap_or(None)
-                {
-                
-                    if let Some(position) = self.document.find(&query[..]) {
-                        self.cursor_position = position;
-                    } else {
-                        self.status_message = StatusMessage::from(format!("Not found :{}.", query));
-                    }
-                }
-            }
+            Key::Ctrl('g') => self.search(),
             Key::Ctrl('s') => self.save(),
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
@@ -360,10 +344,10 @@ impl Editor {
         }
     }
 
-    fn prompt<C>(&mut self, prompt: &str, callback: C) -> Result<Option<String>, std::io::Error> 
-        where
-            C: Fn(&mut Self, Key, &String),
-        {
+    fn prompt<C>(&mut self, prompt: &str, callback: C) -> Result<Option<String>, std::io::Error>
+    where
+        C: Fn(&mut Self, Key, &String),
+    {
         let mut result = String::new();
         loop {
             self.status_message = StatusMessage::from(format!("{}{}", prompt, result));
@@ -390,6 +374,28 @@ impl Editor {
             return Ok(None);
         }
         Ok(Some(result))
+    }
+
+    fn search(&mut self) {
+        let old_position = self.cursor_position.clone();
+        if let Some(query) = self
+            .prompt("Search: ", |editor, _, query| {
+                if let Some(position) = editor.document.find(&query) {
+                    editor.cursor_position = position;
+                    editor.scroll();
+                }
+            })
+            .unwrap_or(None)
+        {
+            if let Some(position) = self.document.find(&query[..]) {
+                self.cursor_position = position;
+            } else {
+                self.status_message = StatusMessage::from(format!("Not found :{}.", query));
+            }
+        } else {
+            self.cursor_position = old_position;
+            self.scroll();
+        }
     }
 }
 
