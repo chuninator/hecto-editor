@@ -56,8 +56,8 @@ impl Editor {
 
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
-        let mut initial_status = String::from("HELP: Ctrl-S = Save | Ctrl-F = quit");
-
+        let mut initial_status =
+            String::from("HELP: Ctrl-G = find | HELP: Ctrl-S = Save | Ctrl-F = quit");
 
         let document = if let Some(file_name) = args.get(1) {
             let doc = Document::open(file_name);
@@ -104,18 +104,18 @@ impl Editor {
             ""
         };
 
-
         let mut file_name = "[No Name]".to_string();
         if let Some(name) = &self.document.file_name {
             file_name = name.clone();
             file_name.truncate(20);
         }
 
-        status = format!(            
-            "{} - {} lines{}",            
-            file_name,            
-            self.document.len(),            
-            modified_indicator);
+        status = format!(
+            "{} - {} lines{}",
+            file_name,
+            self.document.len(),
+            modified_indicator
+        );
 
         let line_indicator = format!(
             "{}/{}",
@@ -160,9 +160,10 @@ impl Editor {
         for terminal_row in 0..height {
             Terminal::clear_current_line();
 
-        if let Some(row) = self
-            .document
-            .row(self.offset.y.saturating_add(terminal_row as usize)) {
+            if let Some(row) = self
+                .document
+                .row(self.offset.y.saturating_add(terminal_row as usize))
+            {
                 self.draw_row(row);
             } else if self.document.is_empty() && terminal_row == height / 3 {
                 self.draw_welcome_message();
@@ -185,7 +186,16 @@ impl Editor {
                     return Ok(());
                 }
                 self.should_quit = true
-            },
+            }
+            Key::Ctrl('g') => {
+                if let Some(query) = self.prompt("Search: ").unwrap_or(None) {
+                    if let Some(position) = self.document.find(&query[..]) {
+                        self.cursor_position = position;
+                    } else {
+                        self.status_message = StatusMessage::from(format!("Not found :{}.", query));
+                    }
+                }
+            }
             Key::Ctrl('s') => self.save(),
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
@@ -201,7 +211,7 @@ impl Editor {
             | Key::Down
             | Key::Left
             | Key::Right
-            | Key::PageUp 
+            | Key::PageUp
             | Key::PageDown
             | Key::End
             | Key::Home => self.move_cursor(pressed_key),
@@ -326,12 +336,11 @@ impl Editor {
     }
 
     fn save(&mut self) {
-
         if self.document.file_name.is_none() {
             let new_name = self.prompt("Save as: ").unwrap_or(None);
             if new_name.is_none() {
                 self.status_message = StatusMessage::from("Save aborted.".to_string());
-                return
+                return;
             }
             self.document.file_name = new_name;
         }
@@ -351,7 +360,7 @@ impl Editor {
 
             match Terminal::read_key()? {
                 Key::Backspace => result.truncate(result.len().saturating_sub(1)),
-                Key::Char('\n') => break, 
+                Key::Char('\n') => break,
                 Key::Char(c) => {
                     if !c.is_control() {
                         result.push(c);
@@ -361,7 +370,7 @@ impl Editor {
                     result.truncate(0);
                     break;
                 }
-                _ => (), 
+                _ => (),
             }
         }
         self.status_message = StatusMessage::from(String::new());
