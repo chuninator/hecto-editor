@@ -18,7 +18,9 @@ impl Document {
         let contents = fs::read_to_string(filename)?;
         let mut rows = Vec::new();
         for value in contents.lines() {
-            rows.push(Row::from(value));
+            let mut row = Row::from(value);
+            row.highlight();
+            rows.push(row);
         }
 
         Ok(Self{
@@ -40,7 +42,10 @@ impl Document {
         } 
 
         #[allow(clippy::indexing_slicing)]
-        let new_row = self.rows[at.y].split(at.x);
+        let current_row = &mut self.rows[at.y];
+        let mut new_row = current_row.split(at.x);
+        current_row.highlight();
+        new_row.highlight();
         self.rows.insert(at.y + 1, new_row);
 
     }
