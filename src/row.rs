@@ -1,8 +1,8 @@
+use crate::highlighting;
+use crate::SearchDirection;
 use std::cmp;
 use termion::color;
 use unicode_segmentation::UnicodeSegmentation;
-use crate::SearchDirection;
-use crate::highlighting;
 
 #[derive(Default)]
 pub struct Row {
@@ -26,6 +26,8 @@ impl Row {
         let end = cmp::min(end, self.string.len());
         let start = cmp::min(start, end);
         let mut result = String::new();
+        let mut current_highlighting = &highlighting::Type::None;
+
         #[allow(clippy::integer_arithmetic)]
         for (index, grapheme) in self.string[..]
             .graphemes(true)
@@ -35,23 +37,27 @@ impl Row {
         {
             if let Some(c) = grapheme.chars().next() {
                 let highlighting_type = self
-                .highlighting
-                .get(index)
-                .unwrap_or(&highlighting::Type::None);
+                    .highlighting
+                    .get(index)
+                    .unwrap_or(&highlighting::Type::None);
 
-                let start_highlight = format!("{}", termion::color::Fg(highlighting_type.to_color()));
-                result.push_str(&start_highlight[..]);
+                if highlighting_type != current_highlighting {
+                    current_highlighting = highlighting_type;
+
+                    let start_highlight =
+                        format!("{}", termion::color::Fg(highlighting_type.to_color()));
+                    result.push_str(&start_highlight[..]);
+                }
 
                 if c == '\t' {
                     result.push_str(" ");
                 } else {
                     result.push(c);
                 }
-
-                let end_highlight = format!("{}", termion::color::Fg(color::Reset));
-                result.push_str(&end_highlight[..]);
             }
         }
+        let end_highlight = format!("{}", termion::color::Fg(color::Reset));
+        result.push_str(&end_highlight[..]);
         result
     }
 
@@ -63,7 +69,7 @@ impl Row {
         }
 
         let mut result: String = String::new();
-        let mut length = 0; 
+        let mut length = 0;
         for (index, grapheme) in self.string[..].graphemes(true).enumerate() {
             length += 1;
             if index == at {
@@ -72,24 +78,23 @@ impl Row {
             }
             result.push_str(grapheme);
         }
-        self.len = length; 
+        self.len = length;
         self.string = result;
     }
-
 
     pub fn delete(&mut self, at: usize) {
         if at >= self.len() {
             return;
         } else {
             let mut result: String = String::new();
-            let mut length = 0; 
+            let mut length = 0;
             for (index, grapheme) in self.string[..].graphemes(true).enumerate() {
                 if index != at {
                     length += 1;
                     result.push_str(grapheme);
                 }
             }
-            self.len = length; 
+            self.len = length;
             self.string = result;
         }
     }
@@ -100,10 +105,10 @@ impl Row {
     }
 
     pub fn split(&mut self, at: usize) -> Self {
-        let mut row: String = String::new(); 
-        let mut length = 0; 
+        let mut row: String = String::new();
+        let mut length = 0;
         let mut split_row: String = String::new();
-        let mut split_length = 0; 
+        let mut split_length = 0;
         for (index, grapheme) in self.string[..].graphemes(true).enumerate() {
             if index < at {
                 length += 1;
@@ -114,7 +119,7 @@ impl Row {
             }
         }
 
-        self.string = row; 
+        self.string = row;
         self.len = length;
 
         Self {
@@ -125,9 +130,8 @@ impl Row {
     }
 
     pub fn find(&self, query: &str, at: usize, direction: SearchDirection) -> Option<usize> {
-      
         if at > self.len {
-            return None; 
+            return None;
         }
 
         let start = if direction == SearchDirection::Forward {
@@ -154,10 +158,8 @@ impl Row {
             substring.rfind(query)
         };
 
-
-
         if let Some(matching_byte_index) = matching_byte_index {
-            for (grapheme_index, (byte_index, _)) in 
+            for (grapheme_index, (byte_index, _)) in
                 substring[..].grapheme_indices(true).enumerate()
             {
                 if matching_byte_index == byte_index {
@@ -194,5 +196,4 @@ impl Row {
     pub fn is_empty(&self) -> bool {
         self.string.is_empty()
     }
-
 }
