@@ -1,4 +1,5 @@
 use crate::highlighting;
+use crate::HighlightingOptions;
 use crate::SearchDirection;
 use std::cmp;
 use termion::color;
@@ -171,7 +172,7 @@ impl Row {
         None
     }
 
-    pub fn highlight(&mut self, word: Option<&str>) {
+    pub fn highlight(&mut self, options: HighlightingOptions, word: Option<&str>) {
         let mut highlighting = Vec::new();
 
         let chars: Vec<char> = self.string.chars().collect();
@@ -202,7 +203,7 @@ impl Row {
                 }
             }
 
-            //supports highlighting numbers that contain decimal points as well 
+            //supports highlighting numbers that contain decimal points as well
 
             let previous_highlight = if index > 0 {
                 highlighting
@@ -211,12 +212,15 @@ impl Row {
             } else {
                 &highlighting::Type::None
             };
-            if (c.is_ascii_digit() &&
-            (prev_is_separator || previous_highlight == &highlighting::Type::Number))
-            || (c == &'.' && previous_highlight == &highlighting::Type::Number) {
-                highlighting.push(highlighting::Type::Number);
-            } else {
-                highlighting.push(highlighting::Type::None);
+            if options.numbers {
+                if (c.is_ascii_digit()
+                    && (prev_is_separator || previous_highlight == &highlighting::Type::Number))
+                    || (c == &'.' && previous_highlight == &highlighting::Type::Number)
+                {
+                    highlighting.push(highlighting::Type::Number);
+                } else {
+                    highlighting.push(highlighting::Type::None);
+                }
             }
             prev_is_separator = c.is_ascii_punctuation() || c.is_ascii_whitespace();
             index += 1;

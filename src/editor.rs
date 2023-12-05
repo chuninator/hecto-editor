@@ -124,7 +124,8 @@ impl Editor {
         );
 
         let line_indicator = format!(
-            "{}/{}",
+            "{} | {}/{}",
+            self.document.file_type(),
             self.cursor_position.y.saturating_add(1),
             self.document.len()
         );
@@ -344,7 +345,7 @@ impl Editor {
         }
 
         if self.document.save().is_ok() {
-            self.status_message = StatusMessage::from("File saved succesffully".to_string());
+            self.status_message = StatusMessage::from("File saved successfully".to_string());
         } else {
             self.status_message = StatusMessage::from("Error writing file!".to_string());
         }
