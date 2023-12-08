@@ -266,6 +266,19 @@ impl Row {
                 }
             }
 
+            //Comments
+            //Easy to handle as single linesl. If we encounter / outside a string all we need to do is check if it's followed by another. If so it's a comment. 
+            if options.comments() && *c == '/' {
+                if let Some(next_char) = chars.get(index.saturating_add(1)) {
+                    if *next_char == '/' {
+                        for _ in index..chars.len() {
+                            highlighting.push(highlighting::Type::Comment);
+                        }
+                        break; 
+                    }
+                };
+            }
+
             if options.numbers() {
                 if (c.is_ascii_digit()
                     && (prev_is_separator || *previous_highlight == highlighting::Type::Number))
