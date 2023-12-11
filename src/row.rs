@@ -172,7 +172,7 @@ impl Row {
         None
     }
 
-    pub fn highlight(&mut self, options: HighlightingOptions, word: Option<&str>) {
+    pub fn highlight(&mut self, options: &HighlightingOptions, word: Option<&str>) {
         self.highlighting = Vec::new();
         let chars: Vec<char> = self.string.chars().collect();
         let mut index = 0; 
@@ -180,6 +180,7 @@ impl Row {
         while let Some(c) = chars.get(index) {
             if self.highlight_char(&mut index, options, *c, &chars)
             || self.highlight_comment(&mut index, options, *c, &chars)
+            || self.highlight_primary_keywords(&mut index, &options, &chars)
             || self.highlight_string(&mut index, options, *c, &chars)
             || self.highlight_number(&mut index, options, *c, &chars) 
             {
@@ -215,7 +216,7 @@ impl Row {
         }
     }
 
-    fn highlight_char(&mut self, index: &mut usize, opts: HighlightingOptions, c: char, chars: &[char]) -> bool {
+    fn highlight_char(&mut self, index: &mut usize, opts: &HighlightingOptions, c: char, chars: &[char]) -> bool {
         if opts.characters() && c == '\'' {
             if let Some(next_char) = chars.get(index.saturating_add(1)) {
                 let closing_index = if *next_char == '\\' {
@@ -238,7 +239,7 @@ impl Row {
         false
     }
 
-    fn highlight_comment(&mut self, index: &mut usize, opts: HighlightingOptions, c: char, chars: &[char]) -> bool {
+    fn highlight_comment(&mut self, index: &mut usize, opts: &HighlightingOptions, c: char, chars: &[char]) -> bool {
         if opts.comments() && c == '/' {
             if let Some(next_char) = chars.get(index.saturating_add(1)) {
                 if *next_char == '/' {
@@ -253,7 +254,7 @@ impl Row {
         false
     }
 
-    fn highlight_string(&mut self, index: &mut usize, opts: HighlightingOptions, c: char, chars: &[char]) -> bool {
+    fn highlight_string(&mut self, index: &mut usize, opts: &HighlightingOptions, c: char, chars: &[char]) -> bool {
 
         if opts.strings()&& c == '"'{
 
@@ -276,7 +277,49 @@ impl Row {
         false
     }
 
-    fn highlight_number(&mut self, index: &mut usize, opts: HighlightingOptions, c: char, chars: &[char]) -> bool {
+    fn highlight_str(
+        &mut self, 
+        index: &mut usize,
+        substring: &str,
+        chars: &[char],
+        hl_type: highlighting::Type,
+    ) -> bool {
+        if substring.is_empty() {
+            return false; 
+        }
+
+        for (substring_index, c) in substring.chars().enumerate() {
+            if let Some(next_char) = chars.get(index.saturating_add(substring_index)) {
+                if *next_char != c {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        for _ in 0..substring.len() {
+            self.highlighting.push(hl_type);
+            *index += 1;
+        }
+        true
+    }
+
+    fn highlight_primary_keywords(
+        &mut self, 
+        index: &mut usize, 
+        opts: &HighlightingOptions, 
+        chars: &[char],
+    ) -> bool {
+        for word in opts.primary_keywords() {
+            if self.highlight_str(index, word, chars, highlighting::Type::PrimaryKeywords) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn highlight_number(&mut self, index: &mut usize, opts: &HighlightingOptions, c: char, chars: &[char]) -> bool {
 
         if opts.numbers() && c.is_ascii_digit() {
             if *index > 0 {
