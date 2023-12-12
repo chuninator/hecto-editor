@@ -319,7 +319,7 @@ impl Row {
         chars: &[char],
     ) -> bool {
         if opts.comments() && c == '/' && *index < chars.len() {
-            if let Some(next_char) = chars.get(index.saturating_add(10)) {
+            if let Some(next_char) = chars.get(index.saturating_add(1)) {
                 if *next_char == '*' {
                     let closing_index = 
                     if let Some(closing_index) = self.string[*index + 2..].find("*/") {
